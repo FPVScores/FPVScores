@@ -36,27 +36,22 @@ def register_handlers(args):
         for exporter in discover():
             args['register_fn'](exporter)
 
-def initialize(**kwargs):
-    if 'rhapi' in kwargs:
-        RHAPI = kwargs['rhapi']
-        
-        RHAPI.fields.register_pilot_attribute( country_ui_field )
+def initialize(rhapi):
+    rhapi.fields.register_pilot_attribute( country_ui_field )
 
-        RHAPI.fields.register_pilot_attribute( UIField('safetycheck', "Safety Checked", UIFieldType.CHECKBOX) )
-        RHAPI.fields.register_pilot_attribute( UIField('fpvs_uuid', "FPVS Pilot UUID", UIFieldType.TEXT) )
+    rhapi.fields.register_pilot_attribute( UIField('safetycheck', "Safety Checked", UIFieldType.CHECKBOX) )
+    rhapi.fields.register_pilot_attribute( UIField('fpvs_uuid', "FPVS Pilot UUID", UIFieldType.TEXT) )
 
-        RHAPI.fields.register_pilot_attribute( UIField('comm_elrs', "ELRS Passphrase", UIFieldType.TEXT) )
-        RHAPI.fields.register_pilot_attribute( UIField('comm_fusion', "Fusion Mac", UIFieldType.TEXT) )
+    rhapi.fields.register_pilot_attribute( UIField('comm_elrs', "ELRS Passphrase", UIFieldType.TEXT) )
+    rhapi.fields.register_pilot_attribute( UIField('comm_fusion', "Fusion Mac", UIFieldType.TEXT) )
 
-        RHAPI.ui.register_panel("fpvscores_run", "FPV Scores", "format")
-        RHAPI.fields.register_option( UIField('event_uuid', "Event UUID", UIFieldType.TEXT), 'fpvscores_run' )
-        #RHAPI.ui.register_quickbutton("fpvscores_run", "fpvscores_upload", "Upload Scores to FPVScores.com", runUploadBtn)
-        RHAPI.ui.register_quickbutton("fpvscores_run", "fpvscores_upload", "Upload Scores to FPVScores.com", runUploadBtn, {'rhapi': RHAPI})
+    rhapi.ui.register_panel("fpvscores_run", "FPV Scores", "format")
+    rhapi.fields.register_option( UIField('event_uuid', "Event UUID", UIFieldType.TEXT), 'fpvscores_run' )
+    #rhapi.ui.register_quickbutton("fpvscores_run", "fpvscores_upload", "Upload Scores to FPVScores.com", runUploadBtn)
+    rhapi.ui.register_quickbutton("fpvscores_run", "fpvscores_upload", "Upload Scores to FPVScores.com", runUploadBtn, {'rhapi': rhapi})
 
-    if 'events' in kwargs:
-        kwargs['events'].on(Evt.DATA_EXPORT_INITIALIZE, 'Export_register_DDR', register_handlers, {}, 75)
-        #kwargs['events'].on(Evt.DATABASE_EXPORT, 'Upload_to_FPVS', uploadToFPVS, {'rhapi': RHAPI}, 100, True) 
-
+    rhapi.events.on(Evt.DATA_EXPORT_INITIALIZE, register_handlers)
+    #rhapi.events.on(Evt.DATABASE_EXPORT, uploadToFPVS) 
 
     bp = Blueprint(
         'fpvscores',
@@ -75,8 +70,8 @@ def initialize(**kwargs):
     @bp.route('/overlay_topbar')
     def overlayTopbarPage():
         #return templating.render_template('stream_topbar.html')     
-        return templating.render_template('stream_topbar.html', serverInfo=None, getOption=RHAPI.db.option, __=RHAPI.__, DEBUG=False)
-    kwargs['rhapi'].ui.blueprint_add(bp)
+        return templating.render_template('stream_topbar.html', serverInfo=None, getOption=rhapi.db.option, __=rhapi.__, DEBUG=False)
+    rhapi.ui.blueprint_add(bp)
 
 def write_json(data):
     payload = json.dumps(data, indent='\t', cls=AlchemyEncoder)
@@ -90,7 +85,7 @@ def write_json(data):
 def runUploadBtn(args):
     print('run upload by frontend button')
     args['rhapi'].ui.message_notify('Import Started')
-    data = args['rhapi'].io.run_export('json_fpvscores_upload')
+    data = args['rhapi'].io.run_export('JSON_FPVScores_Upload')
     #print(data)
     uploadToFPVS_frombtn(args, data)
 
@@ -163,7 +158,6 @@ def discover(*args, **kwargs):
     # returns array of exporters with default arguments
     return [
         DataExporter(
-            'json_fpvscores_upload',
             'JSON FPVScores Upload',
             write_json,
             assemble_fpvscoresUpload
@@ -226,16 +220,17 @@ class AlchemyEncoder(json.JSONEncoder):
     def default(self, obj):  #pylint: disable=arguments-differ
         if isinstance(obj.__class__, DeclarativeMeta):
             # an SQLAlchemy class
+            mapped_instance = inspect(obj)
             fields = {}
-            for field in [x for x in dir(obj) if not x.startswith('_') and x != 'metadata']:
+            for field in mapped_instance.attrs.keys():
                 data = obj.__getattribute__(field)
-                if field != "query" \
-                    and field != "query_class":
+                if field != 'query' \
+                    and field != 'query_class':
                     try:
                         json.dumps(data) # this will fail on non-encodable values, like other classes
-                        if field == "frequencies":
+                        if field == 'frequencies':
                             fields[field] = json.loads(data)
-                        elif field == "enter_ats" or field == "exit_ats":
+                        elif field == 'enter_ats' or field == 'exit_ats':
                             fields[field] = json.loads(data)
                         else:
                             fields[field] = data
