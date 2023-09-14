@@ -5,6 +5,7 @@ logger = logging.getLogger(__name__)
 #import RHUtils
 import json
 from sqlalchemy.ext.declarative import DeclarativeMeta
+from sqlalchemy import inspect
 from data_export import DataExporter
 from eventmanager import Evt
 
