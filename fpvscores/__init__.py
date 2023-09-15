@@ -15,7 +15,6 @@ import requests
 from flask import templating
 from flask.blueprints import Blueprint
 
-
 # Read the JSON file
 with open('plugins/fpvscores/static/assets/data/countries.json', 'r') as file:
     countries_data = json.load(file)
@@ -42,7 +41,6 @@ def initialize(rhapi):
     rhapi.ui.register_panel("fpvscores_run", "FPV Scores", "format")
     rhapi.fields.register_option( UIField('event_uuid', "Event UUID", UIFieldType.TEXT), 'fpvscores_run' )
     rhapi.ui.register_quickbutton("fpvscores_run", "fpvscores_upload", "Upload Scores to FPVScores.com", runUploadBtn, {'rhapi': rhapi})
-
     rhapi.events.on(Evt.DATA_EXPORT_INITIALIZE, register_handlers)
 
     bp = Blueprint(
@@ -88,7 +86,6 @@ def uploadToFPVS(args):
     print('upload results to FPVScores.com')   
     
     url = 'https://api.fpvscores.com/rh/0.0.1/?action=rh_push'
-
     headers = {'Authorization' : 'rhconnect', 'Accept' : 'application/json', 'Content-Type' : 'application/json'}
     r = requests.post(url, data=json_data, headers=headers)
     #print(r.status_code)
@@ -105,13 +102,9 @@ def uploadToFPVS(args):
 ## FPV Scores Upload Data
 def uploadToFPVS_frombtn(args, input_data):
     print('upload results to FPVScores.com')   
-
     json_data =  input_data['data']
-
-    #print(json_data)
     
     url = 'https://api.fpvscores.com/rh/0.0.1/?action=rh_push'
-
     headers = {'Authorization' : 'rhconnect', 'Accept' : 'application/json', 'Content-Type' : 'application/json'}
     r = requests.post(url, data=json_data, headers=headers)
     #print(r.status_code)
@@ -137,9 +130,6 @@ def assemble_fpvscoresUpload(rhapi):
 
     return payload
 
-    
-    
-
 def discover(*args, **kwargs):
     # returns array of exporters with default arguments
     return [
@@ -160,7 +150,6 @@ def assemble_pilots_complete(rhapi):
     for pilot in payload:
         pilot.fpvsuuid = rhapi.db.pilot_attribute_value(pilot.id, 'fpvs_uuid')
         pilot.country = rhapi.db.pilot_attribute_value(pilot.id, 'country')
-        #print( vars(pilot) )
     return payload
 
 
@@ -170,15 +159,13 @@ def assemble_heats_complete(rhapi):
 
 def assemble_heatnodes_complete(rhapi):
     payload = rhapi.db.slots
-    freqs = json.loads(rhapi.race.frequencyset.frequencies)
-    counter = 0
-    for slot in payload:
-        slot.node_frequency_band = freqs['b'][counter]
-        #slot.node_frequency_band = 'test'
 
-        slot.node_frequency_c = freqs['c'][counter]
-        slot.node_frequency_f = freqs['f'][counter]
-        counter += 1
+    freqs = json.loads(rhapi.race.frequencyset.frequencies)
+
+    for slot in payload:
+        slot.node_frequency_band = freqs['b'][slot.node_index]
+        slot.node_frequency_c = freqs['c'][slot.node_index]
+        slot.node_frequency_f = freqs['f'][slot.node_index]
 
     return payload
 
@@ -217,7 +204,6 @@ class AlchemyEncoder(json.JSONEncoder):
             # an SQLAlchemy class
             mapped_instance = inspect(obj)
             fields = {}
-            #for field in [*mapped_instance.attrs.keys(), *custom_vars]:
             for field in dir(obj): 
                 if field in [*mapped_instance.attrs.keys(), *custom_vars]:
                     data = obj.__getattribute__(field)
@@ -233,6 +219,7 @@ class AlchemyEncoder(json.JSONEncoder):
                                 fields[field] = data
                         except TypeError:
                             fields[field] = None
+
             # a json-encodable dict
             return fields
 
