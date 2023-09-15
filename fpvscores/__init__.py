@@ -11,13 +11,9 @@ from eventmanager import Evt
 
 from RHUI import UIField, UIFieldType, UIFieldSelectOption
 
-
 import requests
-
-
 from flask import templating
 from flask.blueprints import Blueprint
-
 
 
 # Read the JSON file
@@ -39,20 +35,15 @@ def register_handlers(args):
 
 def initialize(rhapi):
     rhapi.fields.register_pilot_attribute( country_ui_field )
-
     rhapi.fields.register_pilot_attribute( UIField('safetycheck', "Safety Checked", UIFieldType.CHECKBOX) )
     rhapi.fields.register_pilot_attribute( UIField('fpvs_uuid', "FPVS Pilot UUID", UIFieldType.TEXT) )
-
     rhapi.fields.register_pilot_attribute( UIField('comm_elrs', "ELRS Passphrase", UIFieldType.TEXT) )
     rhapi.fields.register_pilot_attribute( UIField('comm_fusion', "Fusion Mac", UIFieldType.TEXT) )
-
     rhapi.ui.register_panel("fpvscores_run", "FPV Scores", "format")
     rhapi.fields.register_option( UIField('event_uuid', "Event UUID", UIFieldType.TEXT), 'fpvscores_run' )
-    #rhapi.ui.register_quickbutton("fpvscores_run", "fpvscores_upload", "Upload Scores to FPVScores.com", runUploadBtn)
     rhapi.ui.register_quickbutton("fpvscores_run", "fpvscores_upload", "Upload Scores to FPVScores.com", runUploadBtn, {'rhapi': rhapi})
 
     rhapi.events.on(Evt.DATA_EXPORT_INITIALIZE, register_handlers)
-    #rhapi.events.on(Evt.DATABASE_EXPORT, uploadToFPVS) 
 
     bp = Blueprint(
         'fpvscores',
@@ -117,7 +108,7 @@ def uploadToFPVS_frombtn(args, input_data):
 
     json_data =  input_data['data']
 
-    print(json_data)
+    #print(json_data)
     
     url = 'https://api.fpvscores.com/rh/0.0.1/?action=rh_push'
 
@@ -141,13 +132,7 @@ def assemble_fpvscoresUpload(rhapi):
     payload['Heat'] = assemble_heats_complete(rhapi)
     payload['HeatNode'] = assemble_heatnodes_complete(rhapi)
     payload['RaceClass'] = assemble_classes_complete(rhapi)
-    #payload['RaceFormat'] = assemble_formats_complete(RHData, PageCache)
-    #payload['SavedRaceMeta'] = assemble_racemeta_complete(RHData, PageCache)
-    #payload['SavedPilotRace'] = assemble_pilotrace_complete(RHData, PageCache)
-    #payload['SavedRaceLap'] = assemble_racelap_complete(RHData, PageCache)
-    #payload['Results'] = assemble_results(RHData, PageCache)
     payload['GlobalSettings'] = assemble_settings_complete(rhapi)
-    
     payload['FPVScores_results'] = rhapi.eventresults.results
 
     return payload
@@ -172,12 +157,10 @@ def assemble_results_raw(RaceContext):
 
 def assemble_pilots_complete(rhapi):
     payload = rhapi.db.pilots
-
     for pilot in payload:
         pilot.fpvsuuid = rhapi.db.pilot_attribute_value(pilot.id, 'fpvs_uuid')
         pilot.country = rhapi.db.pilot_attribute_value(pilot.id, 'country')
         #print( vars(pilot) )
-
     return payload
 
 
@@ -187,6 +170,16 @@ def assemble_heats_complete(rhapi):
 
 def assemble_heatnodes_complete(rhapi):
     payload = rhapi.db.slots
+    freqs = json.loads(rhapi.race.frequencyset.frequencies)
+    counter = 0
+    for slot in payload:
+        slot.node_frequency_band = freqs['b'][counter]
+        #slot.node_frequency_band = 'test'
+
+        slot.node_frequency_c = freqs['c'][counter]
+        slot.node_frequency_f = freqs['f'][counter]
+        counter += 1
+
     return payload
 
 def assemble_classes_complete(rhapi):
@@ -219,24 +212,27 @@ def assemble_settings_complete(rhapi):
 
 class AlchemyEncoder(json.JSONEncoder):
     def default(self, obj):  #pylint: disable=arguments-differ
+        custom_vars = ['fpvsuuid','country','node_frequency_band','node_frequency_c','node_frequency_f']
         if isinstance(obj.__class__, DeclarativeMeta):
             # an SQLAlchemy class
             mapped_instance = inspect(obj)
             fields = {}
-            for field in mapped_instance.attrs.keys():
-                data = obj.__getattribute__(field)
-                if field != 'query' \
-                    and field != 'query_class':
-                    try:
-                        json.dumps(data) # this will fail on non-encodable values, like other classes
-                        if field == 'frequencies':
-                            fields[field] = json.loads(data)
-                        elif field == 'enter_ats' or field == 'exit_ats':
-                            fields[field] = json.loads(data)
-                        else:
-                            fields[field] = data
-                    except TypeError:
-                        fields[field] = None
+            #for field in [*mapped_instance.attrs.keys(), *custom_vars]:
+            for field in dir(obj): 
+                if field in [*mapped_instance.attrs.keys(), *custom_vars]:
+                    data = obj.__getattribute__(field)
+                    if field != 'query' \
+                        and field != 'query_class':
+                        try:
+                            json.dumps(data) # this will fail on non-encodable values, like other classes
+                            if field == 'frequencies':
+                                fields[field] = json.loads(data)
+                            elif field == 'enter_ats' or field == 'exit_ats':
+                                fields[field] = json.loads(data)
+                            else:
+                                fields[field] = data
+                        except TypeError:
+                            fields[field] = None
             # a json-encodable dict
             return fields
 
