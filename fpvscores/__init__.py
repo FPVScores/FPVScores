@@ -38,9 +38,14 @@ def initialize(rhapi):
     rhapi.fields.register_pilot_attribute( UIField('fpvs_uuid', "FPVS Pilot UUID", UIFieldType.TEXT) )
     rhapi.fields.register_pilot_attribute( UIField('comm_elrs', "ELRS Passphrase", UIFieldType.TEXT) )
     rhapi.fields.register_pilot_attribute( UIField('comm_fusion', "Fusion Mac", UIFieldType.TEXT) )
-    rhapi.ui.register_panel("fpvscores_run", "FPV Scores", "format")
-    rhapi.fields.register_option( UIField('event_uuid', "Event UUID", UIFieldType.TEXT), 'fpvscores_run' )
-    rhapi.ui.register_quickbutton("fpvscores_run", "fpvscores_upload", "Upload Scores to FPVScores.com", runUploadBtn, {'rhapi': rhapi})
+    rhapi.ui.register_panel("fpvscores_format", "FPV Scores", "format")
+    rhapi.ui.register_panel("fpvscores_run", "FPV Scores", "run")
+
+    rhapi.fields.register_option( UIField('event_uuid', "Event UUID", UIFieldType.TEXT), 'fpvscores_format' )
+    rhapi.ui.register_quickbutton("fpvscores_format", "fpvscores_upload", "Upload Scores to FPVScores.com", runUploadBtn, {'rhapi': rhapi})
+    rhapi.ui.register_quickbutton("fpvscores_run", "fpvscores_upload_run", "Upload Scores to FPVScores.com", runUploadBtn, {'rhapi': rhapi})
+    rhapi.ui.register_quickbutton("fpvscores_format", "fpvscores_clear", "Clear event data on FPVScores.com", runClearBtn, {'rhapi': rhapi})
+
     rhapi.events.on(Evt.DATA_EXPORT_INITIALIZE, register_handlers)
 
     bp = Blueprint(
@@ -78,6 +83,27 @@ def runUploadBtn(args):
     data = args['rhapi'].io.run_export('JSON_FPVScores_Upload')
     #print(data)
     uploadToFPVS_frombtn(args, data)
+
+
+def runClearBtn(args):
+    print('run clear by frontend button')
+    args['rhapi'].ui.message_notify('Clear Data Request Send')
+    url = 'https://api.fpvscores.com/rh/0.0.1/?action=rh_clear'
+    json_data = '{"event_uuid":"' + args['rhapi'].db.option('event_uuid') + '"}'
+
+    headers = {'Authorization' : 'rhconnect', 'Accept' : 'application/json', 'Content-Type' : 'application/json'}
+
+    r = requests.post(url, data=json_data, headers=headers)
+    #print(r.status_code)
+    #print(r.text)
+    if r.status_code == 200:
+        if r.text == 'no import!':
+            args['rhapi'].ui.message_notify('FPV Scores: No Import File Found')
+        elif r.text == 'no event found':
+            args['rhapi'].ui.message_notify('FPV Scores: No Matching Event Found - Check your UUID')
+        else:
+            args['rhapi'].ui.message_notify(r.text)
+
 
 
 ## FPV Scores Upload Data
