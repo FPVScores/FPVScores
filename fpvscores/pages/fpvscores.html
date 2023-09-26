@@ -1,8 +1,43 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
     <title>FPVScores RotorHazard Plugin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+	<!-- Scripts -->
+	<script type="text/javascript" src="/static/jquery-3.6.4/jquery-3.6.4.min.js"></script>
+	<script type="text/javascript" src="/static/articulate/articulate.min.js"></script>
+	<script type="text/javascript" src="/static/socket.io-4.6.1/socket.io.min.js"></script>
+	<script type="text/javascript" src="/static/smoothie/smoothie.js"></script>
+	<script type="text/javascript" src="/static/magnific-1.1.0/magnific-inline-min.js"></script>
+	<script type="text/javascript" src="/static/svgasset.js"></script>
+    <script type="text/javascript" src="/static/rh-ui.js"></script>
+	<script type="text/javascript" src="/static/rotorhazard.js"></script>
+
+
+    <script>
+        var data_dependencies = [
+            'all_languages',
+            'language',
+            'result_data',
+            'pilot_data'
+        ];
+
+        $(document).ready(function () {
+            socket.on('language', function (msg) {
+                if (msg.language) {
+                    rotorhazard.interface_language = msg.language;
+                }
+            });
+            
+
+       
+
+        });
+        
+
+    </script>
 
 </head>
 
@@ -16,44 +51,24 @@
         <img src="/fpvscores/static/assets/imgs/fpvscores_logo.png" alt="FPVScores Logo" height="48px"> 
     </header>
 
-    <h2 class="text-center">FPV Scores Plugin</h2>
+    <h2 class="text-center">{{ __("FPV Scores Plugin") }}</h2>
 
-    <p class="text-center p-2">Scan pilot QR to sync information and check-in.</p>
+    <p class="text-center p-2">{{ __("Scan pilot QR to sync information and check-in.") }}</p>
 
 
     <hr>
 
     <div class="text-center mb-5">
-        <h3>Functions:</h3>
+        <h3>{{ __("Functions")}}:</h3>
         
-        <p><a href="/qr_scanner" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Pilot Check-in</a></p>
+        <p><a href="/fpvscores/qr_scanner" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">{{ __("Pilot Check-in")}}</a></p>
+
+        <p><a href="https://fpvscores.com/event-manager/events" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" target="_BLANK">{{ __("Event Manager (Cloud)")}}</a></p>
 
     </div>
 
 
-    <div class="text-center mb-5">
-        <h3>Overlays:</h3>
-        
-        <p><a href="/stream/ddr_topbar" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Top Bar</a></p>
-        <p><a href="/stream/ddr_results_16/0" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Results (top10) + Avatar</a></p>
 
-    </div>
-
-    <div class="text-center mb-5">
-
-        <h3>Node Overlays:</h3>
-
-        <p><a href="/stream/ddr_nodeimg/1" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Pilot Live + Avatar - R1</a></p>
-        <p><a href="/stream/ddr_nodeimg/2" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Pilot Live + Avatar - D2</a></p>
-        <p><a href="/stream/ddr_nodeimg/3" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Pilot Live + Avatar - R3</a></p>
-        <p><a href="/stream/ddr_nodeimg/4" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Pilot Live + Avatar - D4</a></p>
-        <p><a href="/stream/ddr_nodeimg/5" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Pilot Live + Avatar - D6</a></p>
-        <p><a href="/stream/ddr_nodeimg/6" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Pilot Live + Avatar - R6</a></p>
-        <p><a href="/stream/ddr_nodeimg/7" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Pilot Live + Avatar - D7</a></p>
-        <p><a href="/stream/ddr_nodeimg/8" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Pilot Live + Avatar - R8</a></p>
-
-    
-    </div>
 
 
 

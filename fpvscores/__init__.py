@@ -58,14 +58,11 @@ def initialize(rhapi):
 
     @bp.route('/fpvscores')
     def fpscoresPage():
-        return templating.render_template('fpvscores.html')
-    @bp.route('/qr_scanner')
+        return templating.render_template('fpvscores.html', serverInfo=None, getOption=rhapi.db.option, __=rhapi.__)
+    @bp.route('/fpvscores/qr_scanner')
     def qrScannerPage():
-        return templating.render_template('qr_scanner.html')
-    @bp.route('/overlay_topbar')
-    def overlayTopbarPage():
-        #return templating.render_template('stream_topbar.html')     
-        return templating.render_template('stream_topbar.html', serverInfo=None, getOption=rhapi.db.option, __=rhapi.__, DEBUG=False)
+        return templating.render_template('qr_scanner.html', serverInfo=None, getOption=rhapi.db.option, __=rhapi.__)
+
     rhapi.ui.blueprint_add(bp)
 
 def write_json(data):
@@ -78,58 +75,34 @@ def write_json(data):
     }
 
 def runUploadBtn(args):
-    print('run upload by frontend button')
-    args['rhapi'].ui.message_notify('Import Started')
+    #print('run upload by frontend button')
+    args['rhapi'].ui.message_notify(args['rhapi'].__('Event data upload started.'))
     data = args['rhapi'].io.run_export('JSON_FPVScores_Upload')
     #print(data)
     uploadToFPVS_frombtn(args, data)
 
 
 def runClearBtn(args):
-    print('run clear by frontend button')
-    args['rhapi'].ui.message_notify('Clear Data Request Send')
+    #print('run clear by frontend button')
+    args['rhapi'].ui.message_notify(args['rhapi'].__('Clear event data request has been send.'))
     url = 'https://api.fpvscores.com/rh/0.0.1/?action=rh_clear'
     json_data = '{"event_uuid":"' + args['rhapi'].db.option('event_uuid') + '"}'
-
     headers = {'Authorization' : 'rhconnect', 'Accept' : 'application/json', 'Content-Type' : 'application/json'}
-
     r = requests.post(url, data=json_data, headers=headers)
-    #print(r.status_code)
-    #print(r.text)
     if r.status_code == 200:
-        if r.text == 'no import!':
-            args['rhapi'].ui.message_notify('FPV Scores: No Import File Found')
-        elif r.text == 'no event found':
-            args['rhapi'].ui.message_notify('FPV Scores: No Matching Event Found - Check your UUID')
+        if r.text == 'no event found':
+            args['rhapi'].ui.message_notify(args['rhapi'].__('No event found. Check your event UUID on FPVScores.com.'))
+        elif r.text == 'Data Cleared':
+            args['rhapi'].ui.message_notify(args['rhapi'].__('Event data is cleared on FPVScores.com.'))
         else:
             args['rhapi'].ui.message_notify(r.text)
 
-
-
-## FPV Scores Upload Data
-def uploadToFPVS(args):
-    json_data = args['data']
-    print('upload results to FPVScores.com')   
-    
-    url = 'https://api.fpvscores.com/rh/0.0.1/?action=rh_push'
-    headers = {'Authorization' : 'rhconnect', 'Accept' : 'application/json', 'Content-Type' : 'application/json'}
-    r = requests.post(url, data=json_data, headers=headers)
-    #print(r.status_code)
-    #print(r.text)
-    if r.status_code == 200:
-        if r.text == 'no import!':
-            args['rhapi'].ui.message_notify('FPV Scores: No Import File Found')
-        elif r.text == 'no event found':
-            args['rhapi'].ui.message_notify('FPV Scores: No Matching Event Found - Check your UUID')
-        else:
-            args['rhapi'].ui.message_notify(r.text)
 
 
 ## FPV Scores Upload Data
 def uploadToFPVS_frombtn(args, input_data):
-    print('upload results to FPVScores.com')   
+    #print('upload results to FPVScores.com')   
     json_data =  input_data['data']
-    
     url = 'https://api.fpvscores.com/rh/0.0.1/?action=rh_push'
     headers = {'Authorization' : 'rhconnect', 'Accept' : 'application/json', 'Content-Type' : 'application/json'}
     r = requests.post(url, data=json_data, headers=headers)
@@ -137,9 +110,11 @@ def uploadToFPVS_frombtn(args, input_data):
     #print(r.text)
     if r.status_code == 200:
         if r.text == 'no import!':
-            args['rhapi'].ui.message_notify('FPV Scores: No Import File Found')
+            args['rhapi'].ui.message_notify(args['rhapi'].__('No import data found, add data (pilots, classes, heats) first.'))
         elif r.text == 'no event found':
-            args['rhapi'].ui.message_notify('FPV Scores: No Matching Event Found - Check your UUID')
+            args['rhapi'].ui.message_notify(args['rhapi'].__('No event found - Check your event UUID on FPVScores.com.'))
+        elif r.text == 'import succesfull':
+            args['rhapi'].ui.message_notify(args['rhapi'].__('Uploaded data successfully.'))
         else:
             args['rhapi'].ui.message_notify(r.text)       
     
