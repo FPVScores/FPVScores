@@ -8,9 +8,7 @@ This repository is used for error tracking and the required Rotorhazard plugin(s
 - Upload laps/leaderboards/ranks directly from RotorHazard Lap timer to the cloud
 - Manage and showcase events
 - Build a pilot profile and track your progress
-- Custom RotorHazard stream overlays (avatars & country flags)
 - Pilot Check-in using QR Code
-
 
 
 # Documentation
