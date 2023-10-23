@@ -85,7 +85,7 @@ def runUploadBtn(args):
 def runClearBtn(args):
     #print('run clear by frontend button')
     args['rhapi'].ui.message_notify(args['rhapi'].__('Clear event data request has been send.'))
-    url = 'https://api.fpvscores.com/rh/0.0.1/?action=rh_clear'
+    url = 'https://api.fpvscores.com/rh/0.0.2/?action=rh_clear'
     json_data = '{"event_uuid":"' + args['rhapi'].db.option('event_uuid') + '"}'
     headers = {'Authorization' : 'rhconnect', 'Accept' : 'application/json', 'Content-Type' : 'application/json'}
     r = requests.post(url, data=json_data, headers=headers)
@@ -103,7 +103,7 @@ def runClearBtn(args):
 def uploadToFPVS_frombtn(args, input_data):
     #print('upload results to FPVScores.com')   
     json_data =  input_data['data']
-    url = 'https://api.fpvscores.com/rh/0.0.1/?action=rh_push'
+    url = 'https://api.fpvscores.com/rh/0.0.2/?action=rh_push'
     headers = {'Authorization' : 'rhconnect', 'Accept' : 'application/json', 'Content-Type' : 'application/json'}
     r = requests.post(url, data=json_data, headers=headers)
     #print(r.status_code)
