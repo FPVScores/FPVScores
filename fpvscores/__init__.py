@@ -160,14 +160,20 @@ def assemble_heats_complete(rhapi):
 
 def assemble_heatnodes_complete(rhapi):
     payload = rhapi.db.slots
-
+    
     freqs = json.loads(rhapi.race.frequencyset.frequencies)
-
+    
     for slot in payload:
-        slot.node_frequency_band = freqs['b'][slot.node_index]
-        slot.node_frequency_c = freqs['c'][slot.node_index]
-        slot.node_frequency_f = freqs['f'][slot.node_index]
-
+        if slot.node_index is not None and isinstance(slot.node_index, int):
+            slot.node_frequency_band = freqs['b'][slot.node_index] if len(freqs['b']) > slot.node_index else ' '
+            slot.node_frequency_c = freqs['c'][slot.node_index] if len(freqs['c']) > slot.node_index else ' '
+            slot.node_frequency_f = freqs['f'][slot.node_index] if len(freqs['f']) > slot.node_index else ' '
+        else:
+            # Als slot.node_index None is of geen integer, gebruik dan een lege string als de waarde
+            slot.node_frequency_band = ' '
+            slot.node_frequency_c = ' '
+            slot.node_frequency_f = ' '
+        
     return payload
 
 def assemble_classes_complete(rhapi):
