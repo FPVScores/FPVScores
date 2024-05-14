@@ -103,7 +103,7 @@ def runClearBtn(args):
 def uploadToFPVS_frombtn(args, input_data):
     #print('upload results to FPVScores.com')   
     json_data =  input_data['data']
-    url = 'https://api.fpvscores.com/rh/0.0.2/?action=rh_push'
+    url = 'https://api.fpvscores.com/rh/0.0.3/?action=mgp_push'
     headers = {'Authorization' : 'rhconnect', 'Accept' : 'application/json', 'Content-Type' : 'application/json'}
     r = requests.post(url, data=json_data, headers=headers)
     #print(r.status_code)
