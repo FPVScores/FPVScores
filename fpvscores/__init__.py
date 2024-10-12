@@ -8,6 +8,7 @@ from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy import inspect
 from data_export import DataExporter
 from eventmanager import Evt
+from EventActions import ActionEffect
 
 from RHUI import UIField, UIFieldType, UIFieldSelectOption
 
@@ -32,6 +33,19 @@ def register_handlers(args):
         for exporter in discover():
             args['register_fn'](exporter)
 
+
+def register_handlers_actions(args):
+    if 'register_fn' in args:
+        for effect in [
+        ActionEffect(
+            'FPV Scores Auto Upload',
+            auto_upload,
+            [
+                UIField('autoupload', "Message Text (optional)", UIFieldType.TEXT),
+            ]
+        )]:
+            args['register_fn'](effect)
+
 def initialize(rhapi):
     rhapi.fields.register_pilot_attribute( country_ui_field )
     rhapi.fields.register_pilot_attribute( UIField('safetycheck', "Safety Checked", UIFieldType.CHECKBOX) )
@@ -47,6 +61,8 @@ def initialize(rhapi):
     rhapi.ui.register_quickbutton("fpvscores_format", "fpvscores_clear", "Clear event data on FPVScores.com", runClearBtn, {'rhapi': rhapi})
 
     rhapi.events.on(Evt.DATA_EXPORT_INITIALIZE, register_handlers)
+    rhapi.events.on(Evt.ACTIONS_INITIALIZE, register_handlers_actions)
+
 
     bp = Blueprint(
         'fpvscores',
@@ -64,6 +80,9 @@ def initialize(rhapi):
         return templating.render_template('qr_scanner.html', serverInfo=None, getOption=rhapi.db.option, __=rhapi.__)
 
     rhapi.ui.blueprint_add(bp)
+
+def auto_upload(action, args):
+    print("Test Message")
 
 def write_json(data):
     payload = json.dumps(data, indent='\t', cls=AlchemyEncoder)
