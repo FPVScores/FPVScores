@@ -206,7 +206,7 @@ def assemble_settings_complete(rhapi):
 
 class AlchemyEncoder(json.JSONEncoder):
     def default(self, obj):  #pylint: disable=arguments-differ
-        custom_vars = ['fpvsuuid','country','node_frequency_band','node_frequency_c','node_frequency_f']
+        custom_vars = ['fpvsuuid','country','node_frequency_band','node_frequency_c','node_frequency_f', 'display_name']
         if isinstance(obj.__class__, DeclarativeMeta):
             # an SQLAlchemy class
             mapped_instance = inspect(obj)
